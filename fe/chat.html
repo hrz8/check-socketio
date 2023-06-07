@@ -14,10 +14,25 @@
         <button type="submit">Send</button>
     </form>
     
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        const chat = document.getElementById('chatting');
-        chat.addEventListener('submit', function(e) {
+        const socket = io('http://localhost:3005');
+
+        const chats = document.getElementById('chats');
+        const chatForm = document.getElementById('chatting');
+        const message = document.getElementById('message')
+
+        chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            socket.emit('sendMessage', message.value);
+            message.value = '';
+        });
+
+        socket.on('sendMessage', function(msg) {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            chats.appendChild(item);
         });
     </script>
 </body>
