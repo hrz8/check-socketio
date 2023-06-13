@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room chat</title>
+</head>
+<body>
+    <h1>Forum Dua</h1>
+    <ul id="chats"></ul>
+
+    <form id="chatting" action="">
+        <input type="text" name="message" id="message">
+        <button type="submit">Send</button>
+    </form>
+    
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // fetch data history
+        fetch('http://localhost:3005/fd-history/2')
+            .then((res) => res.json())
+            .then((res) => {
+                for (const r of res) {
+                    const item = document.createElement('li');
+                    item.textContent = `${r.user_id}: ${r.message} @ ${r.sent_at}`;
+                    chats.appendChild(item);
+                }
+            });
+
+        const socket = io('http://localhost:3005');
+
+        const chats = document.getElementById('chats');
+        const chatForm = document.getElementById('chatting');
+        const message = document.getElementById('message')
+
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const msg = message.value;
+
+            const raw = JSON.stringify({
+                message: message.value,
+                user_id: localStorage.getItem('user_id'),
+                forum_id: 2,
+            });
+
+            socket.emit('sendToForum', raw);
+            message.value = '';
+        });
+
+        socket.on('broadcastToFrontend', function(msgRaw) {
+            const msg = JSON.parse(msgRaw);
+            if (msg.forum_id == 2) {
+                const item = document.createElement('li');
+                item.textContent = `${msg.user_id}: ${msg.message} @ ${msg.sent_at}`;
+                chats.appendChild(item);
+            }
+        });
+    </script>
+</body>
+</html>
